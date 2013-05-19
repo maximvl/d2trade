@@ -1,0 +1,4 @@
+deps/*
+ebin/*
+*~
+update_path.sh
