@@ -13,10 +13,18 @@ start(_StartType, _StartArgs) ->
 
   cboss_sup:start_link(),
 
-  DNS = os:getenv("OPENSHIFT_APP_DNS"),
-  WsPort = "8000",
-  WsAddr = list_to_binary("ws://" ++ DNS ++ ":" ++ WsPort ++ "/websock"),
-  
+  {ok, Host} = application:get_env(listen_ip),
+  {ok, Port} = application:get_env(listen_port),
+
+  WsAddr = case os:getenv("OPENSHIFT_APP_DNS") of
+             false ->
+               list_to_binary("ws://" ++ Host ++ ":" ++ Port ++ "/websock");
+             DNS ->
+               list_to_binary("ws://" ++ DNS ++ ":8000" ++ "/websock")
+           end,
+
+  io:format("websocket addr: ~s~n", [WsAddr]),
+
   Dispatch = cowboy_router:compile(
                [
                 %% {URIHost, list({URIPath, Handler, Opts})}
@@ -31,17 +39,15 @@ start(_StartType, _StartArgs) ->
                       ]}
                ]),
   
-  Port = erlang:list_to_integer(
-           os:getenv("OPENSHIFT_INTERNAL_PORT")),
+  IntPort = erlang:list_to_integer(Port),
+  {ok, IP} = inet_parse:address(Host),
   
-  {ok, Host} = inet_parse:address(os:getenv("OPENSHIFT_INTERNAL_IP")),
-  
-  io:format("listening on: ~w:~w~n", [Host, Port]),
+  io:format("listening on: ~w:~w~n", [IP, IntPort]),
   
   cowboy:start_http(
     http,
     100,
-    [{port, Port}, {ip, Host}],
+    [{port, IntPort}, {ip, IP}],
     [{env, [{dispatch, Dispatch}]}]).
 
 stop(_State) ->

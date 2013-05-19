@@ -2,3 +2,4 @@ deps/*
 ebin/*
 *~
 update_path.sh
+erl_crash.dump

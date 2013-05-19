@@ -8,5 +8,6 @@
                   stdlib
                  ]},
   {mod, { cboss_app, []}},
-  {env, []}
+  {env, [{listen_ip, "127.11.195.1"},
+         {listen_port, "8080"}]}
  ]}.
